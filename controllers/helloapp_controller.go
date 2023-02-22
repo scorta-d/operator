@@ -24,6 +24,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	"fmt"
+
 	appsv1 "github.com/scorta-d/operator.git/api/v1"
 )
 
@@ -51,6 +53,9 @@ func (r *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	// your logic here
 	log.Info("Process")
+	helloApp := &appsv1.HelloApp{}
+	size := helloApp.Spec.Size
+	log.Info(fmt.Sprintf("Size = %d", size))
 
 	return ctrl.Result{}, nil
 }
