@@ -25,7 +25,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"fmt"
-	"strconv"
 
 	appsv1 "github.com/scorta-d/operator.git/api/v1"
 )
@@ -62,8 +61,8 @@ func (r *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	}
 	size := hello.Spec.Size
 	image := hello.Spec.Image
-	log.Info(fmt.Sprintf("Size = %d, Image: %s", size, image))
-	log.Info(strconv.Itoa(int(size)))
+	args := hello.Spec.Args
+	log.Info(fmt.Sprintf("Size = %d, Image: %s, args: %s", size, image, args))
 
 	log.Info("--- Process end ---")
 
