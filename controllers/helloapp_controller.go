@@ -19,14 +19,19 @@ package controllers
 import (
 	"context"
 
+	"fmt"
+
+	apps "k8s.io/api/apps/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	"fmt"
-
 	appsv1 "github.com/scorta-d/operator.git/api/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // HelloAppReconciler reconciles a HelloApp object
@@ -48,25 +53,56 @@ type HelloAppReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
-func (r *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (this *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	var log = log.FromContext(ctx)
 
 	// your logic here
 	log.Info("--- Process begin ---")
 
-	hello := &appsv1.HelloApp{}
-	err := r.Client.Get(ctx, req.NamespacedName, hello)
+	var hello = &appsv1.HelloApp{}
+	var cli = this.Client
+	var err = cli.Get(ctx, req.NamespacedName, hello)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	size := hello.Spec.Size
-	image := hello.Spec.Image
-	args := hello.Spec.Args
+	var size = hello.Spec.Size
+	var image = hello.Spec.Image
+	var args = hello.Spec.Args
 	log.Info(fmt.Sprintf("Req = %#v", req))
 	log.Info(fmt.Sprintf("Ns = %v", req.NamespacedName.Namespace))
 	log.Info(fmt.Sprintf("Ns = %v", req.NamespacedName.Name))
 	log.Info(fmt.Sprintf("Size = %d, Image: %s, args: %v", size, image, args))
 	log.Info(fmt.Sprintf("Spec: %#v", hello.Spec))
+
+	var deployment = &apps.Deployment{}
+	var nsName = types.NamespacedName{
+		Name:      hello.Name,
+		Namespace: hello.Namespace,
+	}
+	log.Info(fmt.Sprintf("%v", deployment))
+	err = cli.Get(ctx, nsName, deployment)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			deployment.ObjectMeta = metav1.ObjectMeta{
+				Name:      hello.Name,
+				Namespace: hello.Namespace,
+			}
+			deployment.Spec = apps.DeploymentSpec{
+				Replicas: &size,
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{{
+							Image: image,
+							Name:  hello.Name,
+						}},
+					},
+				},
+			}
+			ctrl.SetControllerReference(hello, deployment, this.Scheme)
+		} else {
+			return ctrl.Result{}, err
+		}
+	}
 
 	log.Info("--- Process end ---")
 
