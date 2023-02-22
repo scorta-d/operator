@@ -1,10 +1,11 @@
 apiVersion: apps.dz/v1
 kind: HelloApp
 metadata:
-  name: helloapp-sample
+  name: helloapp-sample3
 spec:
   image: docker.io/subfuzion/netcat:latest
   args: 
     - "-l"
     - "4444"
-  size: 1
+  size: 2
+
