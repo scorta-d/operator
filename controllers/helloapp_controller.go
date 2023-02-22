@@ -53,12 +53,19 @@ func (r *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	var log = log.FromContext(ctx)
 
 	// your logic here
-	log.Info("Process")
-	helloApp := &appsv1.HelloApp{}
-	size := helloApp.Spec.Size
-	image := helloApp.Spec.Image
+	log.Info("--- Process begin ---")
+
+	hello := &appsv1.HelloApp{}
+	err := r.Client.Get(ctx, req.NamespacedName, hello)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	size := hello.Spec.Size
+	image := hello.Spec.Image
 	log.Info(fmt.Sprintf("Size = %d, Image: %s", size, image))
 	log.Info(strconv.Itoa(int(size)))
+
+	log.Info("--- Process end ---")
 
 	return ctrl.Result{}, nil
 }
