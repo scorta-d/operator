@@ -94,6 +94,7 @@ func (this *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 						Containers: []corev1.Container{{
 							Image: image,
 							Name:  hello.Name,
+							Args:  args,
 						}},
 					},
 				},
