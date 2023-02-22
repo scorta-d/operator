@@ -25,6 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"fmt"
+	"strconv"
 
 	appsv1 "github.com/scorta-d/operator.git/api/v1"
 )
@@ -56,6 +57,7 @@ func (r *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	helloApp := &appsv1.HelloApp{}
 	size := helloApp.Spec.Size
 	log.Info(fmt.Sprintf("Size = %d", size))
+	log.Info(strconv.Itoa(int(size)))
 
 	return ctrl.Result{}, nil
 }
