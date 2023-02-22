@@ -83,15 +83,21 @@ func (this *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	err = cli.Get(ctx, nsName, deployment)
 	if err != nil {
 		if errors.IsNotFound(err) {
+			labels := map[string]string{"a": "b"}
+
 			deployment.ObjectMeta = metav1.ObjectMeta{
 				Name:      hello.Name,
 				Namespace: hello.Namespace,
 			}
+
 			deployment.Spec = apps.DeploymentSpec{
 				Replicas: &size,
+				Selector: &metav1.LabelSelector{
+					MatchLabels: labels,
+				},
 				Template: corev1.PodTemplateSpec{
 					ObjectMeta: metav1.ObjectMeta{
-						Labels: map[string]string{"a": "b"},
+						Labels: labels,
 					},
 					Spec: corev1.PodSpec{
 						Containers: []corev1.Container{{
