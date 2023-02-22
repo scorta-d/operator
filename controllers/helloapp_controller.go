@@ -104,6 +104,10 @@ func (this *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			return ctrl.Result{}, err
 		}
 	}
+	err = cli.Create(ctx, deployment)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 
 	log.Info("--- Process end ---")
 
