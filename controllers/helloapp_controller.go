@@ -56,7 +56,8 @@ func (r *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	log.Info("Process")
 	helloApp := &appsv1.HelloApp{}
 	size := helloApp.Spec.Size
-	log.Info(fmt.Sprintf("Size = %d", size))
+	image := helloApp.Spec.Image
+	log.Info(fmt.Sprintf("Size = %d, Image: %s", size, image))
 	log.Info(strconv.Itoa(int(size)))
 
 	return ctrl.Result{}, nil
