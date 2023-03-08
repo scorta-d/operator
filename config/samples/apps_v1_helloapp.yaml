@@ -4,8 +4,7 @@ metadata:
   name: helloapp-sample3
 spec:
   image: docker.io/subfuzion/netcat:latest
-  args: 
+  args:
     - "-l"
     - "4444"
-  size: 2
-
+  size: 3
