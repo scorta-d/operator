@@ -82,6 +82,7 @@ func (this *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	log.Info(fmt.Sprintf("%v", deployment))
 	err = cli.Get(ctx, nsName, deployment)
 	if err != nil {
+	    log.Info("Not found any deployment");
 		if errors.IsNotFound(err) {
 			labels := map[string]string{"a": "b"}
 
