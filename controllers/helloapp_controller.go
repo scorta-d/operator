@@ -69,8 +69,8 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	var image = hello.Spec.Image
 	var args = hello.Spec.Args
 	log.Info(fmt.Sprintf("Req = %#v", req))
-	log.Info(fmt.Sprintf("Ns = %v", req.NamespacedName.Namespace))
-	log.Info(fmt.Sprintf("Ns = %v", req.NamespacedName.Name))
+	log.Info(fmt.Sprintf("Ns.Namespace = %v", req.NamespacedName.Namespace))
+	log.Info(fmt.Sprintf("Ns.Name = %v", req.NamespacedName.Name))
 	log.Info(fmt.Sprintf("Size = %d, Image: %s, args: %v", size, image, args))
 	log.Info(fmt.Sprintf("Spec: %#v", hello.Spec))
 
@@ -81,7 +81,7 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 	log.Info(fmt.Sprintf("Try to get: %v", deployment))
 	err = cli.Get(ctx, nsName, deployment)
-	log.Info(fmt.Sprintf("After get: %v", deployment))
+	log.Info(fmt.Sprintf("After get: %+v", deployment))
 	if err != nil {
 		if errors.IsNotFound(err) {
 			log.Info("Not found any deployment")
@@ -95,6 +95,7 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 	} else {
 		log.Info("Deployment exists.")
+		
 	}
 
 	log.Info("--- Process end ---")
