@@ -86,14 +86,14 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		log.Info("Not found any deployment")
 		if errors.IsNotFound(err) {
 			recons.createDeployment(deployment, hello, size, image, args)
+			err = cli.Create(ctx, deployment)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
 		} else {
 			log.Info("Deployment exists")
 			return ctrl.Result{}, err
 		}
-	}
-	err = cli.Create(ctx, deployment)
-	if err != nil {
-		return ctrl.Result{}, err
 	}
 
 	log.Info("--- Process end ---")
