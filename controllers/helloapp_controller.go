@@ -85,8 +85,7 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	if err != nil {
 		log.Info("Not found any deployment")
 		if errors.IsNotFound(err) {
-			recons.createDeployment(deployment, hello, size, image, args)
-			err = cli.Create(ctx, deployment)
+			err = recons.createDeployment(deployment, hello, size, image, args, ctx)
 			if err != nil {
 				return ctrl.Result{}, err
 			}
@@ -101,7 +100,11 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	return ctrl.Result{}, nil
 }
 
-func (recons *HelloAppReconciler) createDeployment(deployment *apps.Deployment, hello *appsv1.HelloApp, size int32, image string, args []string) {
+func (recons *HelloAppReconciler) createDeployment(
+	deployment *apps.Deployment, hello *appsv1.HelloApp,
+	size int32, image string, args []string, ctx context.Context,
+) error {
+	var err error = nil
 	labels := map[string]string{"a": "b"}
 
 	deployment.ObjectMeta = metav1.ObjectMeta{
@@ -127,7 +130,12 @@ func (recons *HelloAppReconciler) createDeployment(deployment *apps.Deployment, 
 			},
 		},
 	}
-	ctrl.SetControllerReference(hello, deployment, recons.Scheme)
+	err = ctrl.SetControllerReference(hello, deployment, recons.Scheme)
+	if (err == nil) {
+		cli := recons.Client
+		err = cli.Create(ctx, deployment)
+	}
+	return err
 }
 
 // SetupWithManager sets up the controller with the Manager.
