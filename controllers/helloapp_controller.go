@@ -85,7 +85,7 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	log.Info(fmt.Sprintf("After get: %+v", deployment))
 	data, err2 := json.Marshal(deployment)
 	if err2 == nil {
-		log.Info("json out: %s", data)
+		log.Info(fmt.Sprintf("json out: %s", data))
 	}
 	if err != nil {
 		if errors.IsNotFound(err) {
