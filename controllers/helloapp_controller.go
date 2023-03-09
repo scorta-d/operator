@@ -29,7 +29,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	"encoding/json"
 	appsv1 "github.com/scorta-d/operator.git/api/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -82,12 +81,18 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 	log.Info(fmt.Sprintf("Try to get: %v", deployment))
 	err = cli.Get(ctx, nsName, deployment)
-	log.Info(fmt.Sprintf("After get: %+v", deployment))
-	data, err2 := json.MarshalIndent(deployment, "", "   ")
-	if err2 == nil {
-		log.Info(fmt.Sprintf("json out: %s", data))
-	}
-	if err != nil {
+	/*
+		data, err2 := json.MarshalIndent(deployment, "", "   ")
+		if err2 == nil {
+			log.Info(fmt.Sprintf("json out: %s", data))
+		}
+	*/
+	if err == nil {
+		log.Info("Deployment exists.")
+		var repl = deployment.Spec.Replicas
+		log.Info(fmt.Sprintf("spec.replicas = %v", repl))
+
+	} else {
 		if errors.IsNotFound(err) {
 			log.Info("Not found any deployment")
 			err = recons.createDeployment(deployment, hello, size, image, args, ctx)
@@ -98,12 +103,7 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			log.Error(err, "Something is wrong")
 			return ctrl.Result{}, err
 		}
-	} else {
-		log.Info("Deployment exists.")
-		var repl  = deployment.Spec.Replicas 
-		log.Info(fmt.Sprintf ("spec.replicas = %v",repl))
 	}
-
 	log.Info("--- Process end ---")
 
 	return ctrl.Result{}, nil
