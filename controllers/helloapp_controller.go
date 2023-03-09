@@ -83,16 +83,18 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	err = cli.Get(ctx, nsName, deployment)
 	log.Info(fmt.Sprintf("After get: %v", deployment))
 	if err != nil {
-		log.Info("Not found any deployment")
 		if errors.IsNotFound(err) {
+			log.Info("Not found any deployment")
 			err = recons.createDeployment(deployment, hello, size, image, args, ctx)
 			if err != nil {
 				return ctrl.Result{}, err
 			}
 		} else {
-			log.Info("Deployment exists")
+			log.Error(err, "Something is wrong")
 			return ctrl.Result{}, err
 		}
+	} else {
+		log.Info("Deployment exists.")
 	}
 
 	log.Info("--- Process end ---")
@@ -131,7 +133,7 @@ func (recons *HelloAppReconciler) createDeployment(
 		},
 	}
 	err = ctrl.SetControllerReference(hello, deployment, recons.Scheme)
-	if (err == nil) {
+	if err == nil {
 		cli := recons.Client
 		err = cli.Create(ctx, deployment)
 	}
