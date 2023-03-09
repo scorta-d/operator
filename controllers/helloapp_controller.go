@@ -100,7 +100,8 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 	} else {
 		log.Info("Deployment exists.")
-
+		var repl  = deployment.Spec.Replicas 
+		log.Info(fmt.Sprintf ("spec.replicas = %v",repl))
 	}
 
 	log.Info("--- Process end ---")
