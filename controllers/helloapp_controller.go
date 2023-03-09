@@ -53,14 +53,14 @@ type HelloAppReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
-func (this *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	var log = log.FromContext(ctx)
 
 	// your logic here
 	log.Info("--- Process begin ---")
 
 	var hello = &appsv1.HelloApp{}
-	var cli = this.Client
+	var cli = recons.Client
 	var err = cli.Get(ctx, req.NamespacedName, hello)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -85,7 +85,7 @@ func (this *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	if err != nil {
 		log.Info("Not found any deployment")
 		if errors.IsNotFound(err) {
-			this.createDeployment(deployment, hello, size, image, args)
+			recons.createDeployment(deployment, hello, size, image, args)
 		} else {
 			log.Info("Deployment exists")
 			return ctrl.Result{}, err
@@ -101,7 +101,7 @@ func (this *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	return ctrl.Result{}, nil
 }
 
-func (this *HelloAppReconciler) createDeployment(deployment *apps.Deployment, hello *appsv1.HelloApp, size int32, image string, args []string) {
+func (recons *HelloAppReconciler) createDeployment(deployment *apps.Deployment, hello *appsv1.HelloApp, size int32, image string, args []string) {
 	labels := map[string]string{"a": "b"}
 
 	deployment.ObjectMeta = metav1.ObjectMeta{
@@ -127,7 +127,7 @@ func (this *HelloAppReconciler) createDeployment(deployment *apps.Deployment, he
 			},
 		},
 	}
-	ctrl.SetControllerReference(hello, deployment, this.Scheme)
+	ctrl.SetControllerReference(hello, deployment, recons.Scheme)
 }
 
 // SetupWithManager sets up the controller with the Manager.
