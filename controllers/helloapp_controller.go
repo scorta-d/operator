@@ -79,7 +79,7 @@ func (this *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		Name:      hello.Name,
 		Namespace: hello.Namespace,
 	}
-	log.Info(fmt.Sprintf("%v", deployment))
+	log.Info(fmt.Sprintf("Try to find: %v", deployment))
 	err = cli.Get(ctx, nsName, deployment)
 	if err != nil {
 	    log.Info("Not found any deployment");
