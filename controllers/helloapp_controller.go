@@ -79,10 +79,11 @@ func (this *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		Name:      hello.Name,
 		Namespace: hello.Namespace,
 	}
-	log.Info(fmt.Sprintf("Try to find: %v", deployment))
+	log.Info(fmt.Sprintf("Try to get: %v", deployment))
 	err = cli.Get(ctx, nsName, deployment)
+	log.Info(fmt.Sprintf("After get: %v", deployment))
 	if err != nil {
-	    log.Info("Not found any deployment");
+		log.Info("Not found any deployment")
 		if errors.IsNotFound(err) {
 			labels := map[string]string{"a": "b"}
 
