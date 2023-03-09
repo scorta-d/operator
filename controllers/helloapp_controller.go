@@ -85,33 +85,9 @@ func (this *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	if err != nil {
 		log.Info("Not found any deployment")
 		if errors.IsNotFound(err) {
-			labels := map[string]string{"a": "b"}
-
-			deployment.ObjectMeta = metav1.ObjectMeta{
-				Name:      hello.Name,
-				Namespace: hello.Namespace,
-			}
-
-			deployment.Spec = apps.DeploymentSpec{
-				Replicas: &size,
-				Selector: &metav1.LabelSelector{
-					MatchLabels: labels,
-				},
-				Template: corev1.PodTemplateSpec{
-					ObjectMeta: metav1.ObjectMeta{
-						Labels: labels,
-					},
-					Spec: corev1.PodSpec{
-						Containers: []corev1.Container{{
-							Image: image,
-							Name:  hello.Name,
-							Args:  args,
-						}},
-					},
-				},
-			}
-			ctrl.SetControllerReference(hello, deployment, this.Scheme)
+			this.createDeployment(deployment, hello, size, image, args)
 		} else {
+			log.Info("Deployment exists")
 			return ctrl.Result{}, err
 		}
 	}
@@ -123,6 +99,35 @@ func (this *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	log.Info("--- Process end ---")
 
 	return ctrl.Result{}, nil
+}
+
+func (this *HelloAppReconciler) createDeployment(deployment *apps.Deployment, hello *appsv1.HelloApp, size int32, image string, args []string) {
+	labels := map[string]string{"a": "b"}
+
+	deployment.ObjectMeta = metav1.ObjectMeta{
+		Name:      hello.Name,
+		Namespace: hello.Namespace,
+	}
+
+	deployment.Spec = apps.DeploymentSpec{
+		Replicas: &size,
+		Selector: &metav1.LabelSelector{
+			MatchLabels: labels,
+		},
+		Template: corev1.PodTemplateSpec{
+			ObjectMeta: metav1.ObjectMeta{
+				Labels: labels,
+			},
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{{
+					Image: image,
+					Name:  hello.Name,
+					Args:  args,
+				}},
+			},
+		},
+	}
+	ctrl.SetControllerReference(hello, deployment, this.Scheme)
 }
 
 // SetupWithManager sets up the controller with the Manager.
