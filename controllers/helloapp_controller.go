@@ -81,6 +81,8 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 	log.Info(fmt.Sprintf("Try to get: %v", deployment))
 	err = cli.Get(ctx, nsName, deployment)
+	log.Info(fmt.Sprintf("Get err: %v", err))
+
 	/*
 		data, err2 := json.MarshalIndent(deployment, "", "   ")
 		if err2 == nil {
