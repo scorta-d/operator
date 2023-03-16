@@ -120,6 +120,8 @@ func (recons *HelloAppReconciler) createDeployment(
 	deployment *apps.Deployment, hello *appsv1.HelloApp,
 	size int32, image string, args []string, ctx context.Context,
 ) error {
+	var log = log.FromContext(ctx)
+	log.Info(fmt.Sprintf("Create deployment with %d replicas", size))
 	var err error = nil
 	labels := map[string]string{"a": "b"}
 
