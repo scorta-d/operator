@@ -84,9 +84,8 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	var image = hello.Spec.Image
 	var args = hello.Spec.Args
 	log.Info(inPrintf("Request = %s", req))
-	log.Info("request: ", "ns", req.NamespacedName.Namespace)
 	log.Info(fmt.Sprintf("Required size = %d, Image: %s, args: %v", size, image, args))
-	log.Info(fmt.Sprintf("Spec: %#v", hello.Spec))
+	log.Info(inPrintf("Spec: %s", hello.Spec))
 
 	var deployment = &apps.Deployment{}
 	var nsName = types.NamespacedName{
