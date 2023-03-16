@@ -83,7 +83,7 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	var size = hello.Spec.Size
 	var image = hello.Spec.Image
 	var args = hello.Spec.Args
-	log.Info(inPrintf("Request = %s", indent(req)))
+	log.Info(inPrintf("Request = %s", req))
 	log.Info(fmt.Sprintf("Ns.Namespace = %v", req.NamespacedName.Namespace))
 	log.Info(fmt.Sprintf("Ns.Name = %v", req.NamespacedName.Name))
 	log.Info(fmt.Sprintf("Required size = %d, Image: %s, args: %v", size, image, args))
@@ -108,7 +108,8 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		log.Info("Deployment exists.")
 		data, err2 := json.MarshalIndent(deployment, "", "   ")
 		if err2 == nil {
-			log.Info(fmt.Sprintf("json out: %s", data))
+			ind := fmt.Sprintf("json out: %s", data)
+			log.Info(ind)
 		}
 		var repl = *deployment.Spec.Replicas
 		log.Info(fmt.Sprintf("spec.replicas = %v", repl))
