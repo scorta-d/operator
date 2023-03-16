@@ -83,7 +83,7 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	var size = hello.Spec.Size
 	var image = hello.Spec.Image
 	var args = hello.Spec.Args
-	log.Info(inPrintf("Req = %s", indent(req)))
+	log.Info(inPrintf("Request = %s", indent(req)))
 	log.Info(fmt.Sprintf("Ns.Namespace = %v", req.NamespacedName.Namespace))
 	log.Info(fmt.Sprintf("Ns.Name = %v", req.NamespacedName.Name))
 	log.Info(fmt.Sprintf("Required size = %d, Image: %s, args: %v", size, image, args))
