@@ -131,15 +131,10 @@ func (recons *HelloAppReconciler) resizeDeployment(
 	deployment *apps.Deployment, hello *appsv1.HelloApp,
 	size int32, ctx context.Context,
 ) error {
-	var err error
 	*deployment.Spec.Replicas = size
-	//err = ctrl.SetControllerReference(hello, deployment, recons.Scheme)
-	//if err == nil {
-	var cli = recons.Client
-	err = cli.Update(ctx, deployment)
-	//}
+	var cli client.Client = recons.Client
+	var err error = cli.Update(ctx, deployment)
 	return err
-
 }
 
 func (recons *HelloAppReconciler) createDeployment(
