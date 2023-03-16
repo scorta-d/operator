@@ -103,7 +103,7 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		var repl = *deployment.Spec.Replicas
 		log.Info(fmt.Sprintf("spec.replicas = %v", repl))
 		if repl != size {
-			log.Info("Resize is required")
+			log.Info("Resize is required: %d vs %d", repl, size)
 		}
 	} else {
 		if errors.IsNotFound(err) {
