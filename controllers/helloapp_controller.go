@@ -104,11 +104,13 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		log.Info(fmt.Sprintf("spec.replicas = %v", repl))
 		if repl != size {
 			log.Info(fmt.Sprintf("Resize is required: %d vs %d requested", repl, size))
-			err = recons.resizeDeployment(deployment, hello, size, ctx)
+			err = recons.resizeDeployment(deployment, size, ctx)
 			if err != nil {
 				return ctrl.Result{}, err
 			}
 			log.Info("Resize done")
+		} else {
+			log.Info("Resize is not required")
 		}
 	} else {
 		if errors.IsNotFound(err) {
@@ -128,7 +130,7 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 }
 
 func (recons *HelloAppReconciler) resizeDeployment(
-	deployment *apps.Deployment, hello *appsv1.HelloApp,
+	deployment *apps.Deployment,
 	size int32, ctx context.Context,
 ) error {
 	*deployment.Spec.Replicas = size
