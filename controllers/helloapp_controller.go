@@ -98,21 +98,13 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	err = cli.Get(ctx, nsName, deployment)
 	log.Info(fmt.Sprintf("Get err: %v", err))
 
-	/*
-		data, err2 := json.MarshalIndent(deployment, "", "   ")
-		if err2 == nil {
-			log.Info(fmt.Sprintf("json out: %s", data))
-		}
-	*/
 	if err == nil {
-		log.Info("Deployment exists.")
-		data, err2 := json.MarshalIndent(deployment, "", "   ")
-		if err2 == nil {
-			ind := fmt.Sprintf("json out: %s", data)
-			log.Info(ind)
-		}
+		log.Info(inPrintf("Deployment exists: %s", deployment))
 		var repl = *deployment.Spec.Replicas
 		log.Info(fmt.Sprintf("spec.replicas = %v", repl))
+		if repl != size {
+			log.Info("Resize is required")
+		}
 	} else {
 		if errors.IsNotFound(err) {
 			log.Info("Not found any deployment")
