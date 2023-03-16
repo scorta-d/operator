@@ -42,6 +42,19 @@ type HelloAppReconciler struct {
 	Scheme *runtime.Scheme
 }
 
+func indent(obj interface{}) string {
+	var result string = ""
+	data, err2 := json.MarshalIndent(obj, "", "   ")
+	if err2 == nil {
+		result = string(data)
+	}
+	return result
+}
+
+func inPrintf(fs string, obj interface{}) string {
+	return fmt.Sprintf(fs, indent(obj))
+}
+
 //+kubebuilder:rbac:groups=apps.dz,resources=helloapps,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=apps.dz,resources=helloapps/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=apps.dz,resources=helloapps/finalizers,verbs=update
@@ -70,10 +83,10 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	var size = hello.Spec.Size
 	var image = hello.Spec.Image
 	var args = hello.Spec.Args
-	log.Info(fmt.Sprintf("Req = %#v", req))
+	log.Info(inPrintf("Req = %s", indent(req)))
 	log.Info(fmt.Sprintf("Ns.Namespace = %v", req.NamespacedName.Namespace))
 	log.Info(fmt.Sprintf("Ns.Name = %v", req.NamespacedName.Name))
-	log.Info(fmt.Sprintf("Size = %d, Image: %s, args: %v", size, image, args))
+	log.Info(fmt.Sprintf("Required size = %d, Image: %s, args: %v", size, image, args))
 	log.Info(fmt.Sprintf("Spec: %#v", hello.Spec))
 
 	var deployment = &apps.Deployment{}
