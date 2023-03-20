@@ -96,16 +96,22 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 		if err == nil {
 			log.Info(inPrintf("Deployment exists: %s", deployment))
-			err = recons.resizeDeployment(deployment, size, ctx, log)
-			if err == nil {
-				err = recons.reimageDeployment(deployment, image, ctx, log)
+			var change bool = false
+			change = change || recons.resizeDeployment(deployment, size, ctx, log)
+			change = change || recons.reimageDeployment(deployment, image, ctx, log)
+			if change {
+				log.Info("Image change to be applied")
+				var cli client.Client = recons.Client
+				err = cli.Update(ctx, deployment)
+				log.Info("Deployment updated")
+			} else {
+				log.Info("No image change")
 			}
 		} else if errors.IsNotFound(err) {
 			log.Info("Not found any deployment")
 
 			err = recons.createDeployment(deployment, hello, size, image, args, ctx)
 		}
-
 	} else {
 		log.Error(err, "Something is wrong")
 	}
@@ -116,25 +122,24 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 func (recons *HelloAppReconciler) resizeDeployment(
 	deployment *apps.Deployment,
 	size int32, ctx context.Context, log logr.Logger,
-) error {
-	var err error
+) bool {
+	var change bool = false
 	var repl = *deployment.Spec.Replicas
 	log.Info(fmt.Sprintf("spec.replicas = %v", repl))
 	if repl != size {
 		log.Info(fmt.Sprintf("Resize is required: %d vs %d requested", repl, size))
 		*deployment.Spec.Replicas = size
-		var cli client.Client = recons.Client
-		err = cli.Update(ctx, deployment)
+		change = true
 		log.Info("Resize done")
 	} else {
 		log.Info("Resize is not required")
 	}
-	return err
+	return change
 }
 func (recons *HelloAppReconciler) reimageDeployment(
 	deployment *apps.Deployment,
 	image string, ctx context.Context, log logr.Logger,
-) error {
+) bool {
 	var change bool = false
 	for _, container := range deployment.Spec.Template.Spec.Containers {
 		if image != container.Image {
@@ -142,15 +147,7 @@ func (recons *HelloAppReconciler) reimageDeployment(
 			change = true
 		}
 	}
-	var err error = nil
-	if change {
-		log.Info("Image change to be applied")
-		var cli client.Client = recons.Client
-		err = cli.Update(ctx, deployment)
-	} else {
-		log.Info("No image change")
-	}
-	return err
+	return change
 }
 
 func (recons *HelloAppReconciler) createDeployment(
