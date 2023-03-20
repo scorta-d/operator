@@ -142,7 +142,7 @@ func (recons *HelloAppReconciler) reimageDeployment(
 	for i := range deployment.Spec.Template.Spec.Containers {
 		var container = &deployment.Spec.Template.Spec.Containers[i]
 		if image != container.Image {
-			deployment.Spec.Template.Spec.Containers[i].Image = image
+			container.Image = image
 			log.Info(
 				fmt.Sprintf(
 					"Images: \n %v\n %v\n %v\n",

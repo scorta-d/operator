@@ -3,7 +3,7 @@ kind: HelloApp
 metadata:
   name: helloapp-sample3
 spec:
-  image: docker.io/toolbelt/netcat:2023-01-23
+  image: docker.io/subfuzion/netcat:latest
   args:
     - "-l"
     - "4444"
