@@ -103,9 +103,7 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 				log.Info("Image change to be applied")
 				var cli client.Client = recons.Client
 				err = cli.Update(ctx, deployment)
-				log.Info("Deployment updated")
-			} else {
-				log.Info("No image change")
+				log.Info(fmt.Sprintf("Deployment updated: %v", err))
 			}
 		} else if errors.IsNotFound(err) {
 			log.Info("Not found any deployment")
@@ -141,9 +139,18 @@ func (recons *HelloAppReconciler) reimageDeployment(
 	image string, ctx context.Context, log logr.Logger,
 ) bool {
 	var change bool = false
-	for _, container := range deployment.Spec.Template.Spec.Containers {
+	for i := range deployment.Spec.Template.Spec.Containers {
+		var container = &deployment.Spec.Template.Spec.Containers[i]
 		if image != container.Image {
-			container.Image = image
+			deployment.Spec.Template.Spec.Containers[i].Image = image
+			log.Info(
+				fmt.Sprintf(
+					"Images: \n %v\n %v\n %v\n",
+					image,
+					deployment.Spec.Template.Spec.Containers[i].Image,
+					container.Image,
+				),
+			)
 			change = true
 		}
 	}

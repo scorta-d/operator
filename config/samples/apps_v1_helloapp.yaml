@@ -3,8 +3,8 @@ kind: HelloApp
 metadata:
   name: helloapp-sample3
 spec:
-  image: docker.io/subfuzion/netcat:latest
+  image: docker.io/toolbelt/netcat:2023-01-23
   args:
     - "-l"
     - "4444"
-  size: 3
+  size: 2
