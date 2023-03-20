@@ -31,6 +31,7 @@ import (
 
 	"encoding/json"
 
+	"github.com/go-logr/logr"
 	appsv1 "github.com/scorta-d/operator.git/api/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -69,71 +70,86 @@ func inPrintf(fs string, obj interface{}) string {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
 func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	var err error
 	var log = log.FromContext(ctx)
-
-	// your logic here
 	log.Info("--- Process begin ---")
 
 	var hello = &appsv1.HelloApp{}
 	var cli = recons.Client
-	var err = cli.Get(ctx, req.NamespacedName, hello)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-	var size = hello.Spec.Size
-	var image = hello.Spec.Image
-	var args = hello.Spec.Args
-	log.Info(inPrintf("Request = %s", req))
-	log.Info(fmt.Sprintf("Required size = %d, Image: %s, args: %v", size, image, args))
-	log.Info(inPrintf("Spec: %s", hello.Spec))
-
-	var deployment = &apps.Deployment{}
-	var nsName = types.NamespacedName{
-		Name:      hello.Name,
-		Namespace: hello.Namespace,
-	}
-	log.Info(fmt.Sprintf("Try to get: %v", deployment))
-	err = cli.Get(ctx, nsName, deployment)
-	log.Info(fmt.Sprintf("Get err: %v", err))
-
+	err = cli.Get(ctx, req.NamespacedName, hello)
 	if err == nil {
-		log.Info(inPrintf("Deployment exists: %s", deployment))
-		var repl = *deployment.Spec.Replicas
-		log.Info(fmt.Sprintf("spec.replicas = %v", repl))
-		if repl != size {
-			log.Info(fmt.Sprintf("Resize is required: %d vs %d requested", repl, size))
-			err = recons.resizeDeployment(deployment, size, ctx)
-			if err != nil {
-				return ctrl.Result{}, err
-			}
-			log.Info("Resize done")
-		} else {
-			log.Info("Resize is not required")
+		var size = hello.Spec.Size
+		var image = hello.Spec.Image
+		var args = hello.Spec.Args
+		log.Info(inPrintf("Request = %s", req))
+		log.Info(fmt.Sprintf("Required size = %d, Image: %s, args: %v", size, image, args))
+		log.Info(inPrintf("Spec: %s", hello.Spec))
+
+		var deployment = &apps.Deployment{}
+		var nsName = types.NamespacedName{
+			Name:      hello.Name,
+			Namespace: hello.Namespace,
 		}
-	} else {
-		if errors.IsNotFound(err) {
+		log.Info(fmt.Sprintf("Try to get: %v", deployment))
+		err = cli.Get(ctx, nsName, deployment)
+		log.Info(fmt.Sprintf("Get err: %v", err))
+
+		if err == nil {
+			log.Info(inPrintf("Deployment exists: %s", deployment))
+			err = recons.resizeDeployment(deployment, size, ctx, log)
+			if err == nil {
+				err = recons.reimageDeployment(deployment, image, ctx, log)
+			}
+		} else if errors.IsNotFound(err) {
 			log.Info("Not found any deployment")
+
 			err = recons.createDeployment(deployment, hello, size, image, args, ctx)
-			if err != nil {
-				return ctrl.Result{}, err
-			}
-		} else {
-			log.Error(err, "Something is wrong")
-			return ctrl.Result{}, err
 		}
+
+	} else {
+		log.Error(err, "Something is wrong")
 	}
 	log.Info("--- Process end ---")
-
-	return ctrl.Result{}, nil
+	return ctrl.Result{}, err
 }
 
 func (recons *HelloAppReconciler) resizeDeployment(
 	deployment *apps.Deployment,
-	size int32, ctx context.Context,
+	size int32, ctx context.Context, log logr.Logger,
 ) error {
-	*deployment.Spec.Replicas = size
-	var cli client.Client = recons.Client
-	var err error = cli.Update(ctx, deployment)
+	var err error
+	var repl = *deployment.Spec.Replicas
+	log.Info(fmt.Sprintf("spec.replicas = %v", repl))
+	if repl != size {
+		log.Info(fmt.Sprintf("Resize is required: %d vs %d requested", repl, size))
+		*deployment.Spec.Replicas = size
+		var cli client.Client = recons.Client
+		err = cli.Update(ctx, deployment)
+		log.Info("Resize done")
+	} else {
+		log.Info("Resize is not required")
+	}
+	return err
+}
+func (recons *HelloAppReconciler) reimageDeployment(
+	deployment *apps.Deployment,
+	image string, ctx context.Context, log logr.Logger,
+) error {
+	var change bool = false
+	for _, container := range deployment.Spec.Template.Spec.Containers {
+		if image != container.Image {
+			container.Image = image
+			change = true
+		}
+	}
+	var err error = nil
+	if change {
+		log.Info("Image change to be applied")
+		var cli client.Client = recons.Client
+		err = cli.Update(ctx, deployment)
+	} else {
+		log.Info("No image change")
+	}
 	return err
 }
 
