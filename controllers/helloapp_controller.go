@@ -56,67 +56,6 @@ func inPrintf(fs string, obj interface{}) string {
 	return fmt.Sprintf(fs, indent(obj))
 }
 
-//+kubebuilder:rbac:groups=apps.dz,resources=helloapps,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=apps.dz,resources=helloapps/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=apps.dz,resources=helloapps/finalizers,verbs=update
-
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the HelloApp object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
-func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	var err error
-	var log = log.FromContext(ctx)
-	log.Info("--- Process begin ---")
-
-	var hello = &appsv1.HelloApp{}
-	var cli = recons.Client
-	err = cli.Get(ctx, req.NamespacedName, hello)
-	if err == nil {
-		var size = hello.Spec.Size
-		var image = hello.Spec.Image
-		var args = hello.Spec.Args
-		log.Info(inPrintf("Request = %s", req))
-		log.Info(fmt.Sprintf("Required size = %d, Image: %s, args: %v", size, image, args))
-		log.Info(inPrintf("Spec: %s", hello.Spec))
-
-		var deployment = &apps.Deployment{}
-		var nsName = types.NamespacedName{
-			Name:      hello.Name,
-			Namespace: hello.Namespace,
-		}
-		log.Info(fmt.Sprintf("Try to get: %v", deployment))
-		err = cli.Get(ctx, nsName, deployment)
-		log.Info(fmt.Sprintf("Get err: %v", err))
-
-		if err == nil {
-			log.Info(inPrintf("Deployment exists: %s", deployment))
-			var change bool = false
-			change = change || recons.resizeDeployment(deployment, size, ctx, log)
-			change = change || recons.reimageDeployment(deployment, image, ctx, log)
-			if change {
-				log.Info("Image change to be applied")
-				var cli client.Client = recons.Client
-				err = cli.Update(ctx, deployment)
-				log.Info(fmt.Sprintf("Deployment updated: %v", err))
-			}
-		} else if errors.IsNotFound(err) {
-			log.Info("Not found any deployment")
-
-			err = recons.createDeployment(deployment, hello, size, image, args, ctx)
-		}
-	} else {
-		log.Error(err, "Something is wrong")
-	}
-	log.Info("--- Process end ---")
-	return ctrl.Result{}, err
-}
-
 func (recons *HelloAppReconciler) resizeDeployment(
 	deployment *apps.Deployment,
 	size int32, ctx context.Context, log logr.Logger,
@@ -202,4 +141,65 @@ func (r *HelloAppReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&appsv1.HelloApp{}).
 		Complete(r)
+}
+
+//+kubebuilder:rbac:groups=apps.dz,resources=helloapps,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=apps.dz,resources=helloapps/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=apps.dz,resources=helloapps/finalizers,verbs=update
+
+// Reconcile is part of the main kubernetes reconciliation loop which aims to
+// move the current state of the cluster closer to the desired state.
+// TODO(user): Modify the Reconcile function to compare the state specified by
+// the HelloApp object against the actual cluster state, and then
+// perform operations to make the cluster state reflect the state specified by
+// the user.
+//
+// For more details, check Reconcile and its Result here:
+// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
+func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	var err error
+	var log = log.FromContext(ctx)
+	log.Info("--- Process begin ---")
+
+	var hello = &appsv1.HelloApp{}
+	var cli = recons.Client
+	err = cli.Get(ctx, req.NamespacedName, hello)
+	if err == nil {
+		var size = hello.Spec.Size
+		var image = hello.Spec.Image
+		var args = hello.Spec.Args
+		log.Info(inPrintf("Request = %s", req))
+		log.Info(fmt.Sprintf("Required size = %d, Image: %s, args: %v", size, image, args))
+		log.Info(inPrintf("Spec: %s", hello.Spec))
+
+		var deployment = &apps.Deployment{}
+		var nsName = types.NamespacedName{
+			Name:      hello.Name,
+			Namespace: hello.Namespace,
+		}
+		log.Info(fmt.Sprintf("Try to get: %v", deployment))
+		err = cli.Get(ctx, nsName, deployment)
+		log.Info(fmt.Sprintf("Get err: %v", err))
+
+		if err == nil {
+			log.Info(inPrintf("Deployment exists: %s", deployment))
+			var change bool = false
+			change = change || recons.resizeDeployment(deployment, size, ctx, log)
+			change = change || recons.reimageDeployment(deployment, image, ctx, log)
+			if change {
+				log.Info("Image change to be applied")
+				var cli client.Client = recons.Client
+				err = cli.Update(ctx, deployment)
+				log.Info(fmt.Sprintf("Deployment updated: %v", err))
+			}
+		} else if errors.IsNotFound(err) {
+			log.Info("Not found any deployment")
+
+			err = recons.createDeployment(deployment, hello, size, image, args, ctx)
+		}
+	} else {
+		log.Error(err, "Something is wrong")
+	}
+	log.Info("--- Process end ---")
+	return ctrl.Result{}, err
 }
