@@ -197,6 +197,8 @@ func (recons *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 			err = recons.createDeployment(deployment, hello, size, image, args, ctx)
 		}
+	} else if errors.IsNotFound(err) {
+		log.Info("CR Not found")
 	} else {
 		log.Error(err, "Something is wrong")
 	}
